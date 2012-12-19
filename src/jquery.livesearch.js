@@ -1,10 +1,19 @@
 (function($) {
-  $.extend($.expr[':'], {
-    'containsi': function(elem, i, match, array) {
-      return $(elem).text().toLowerCase()
-        .indexOf((match[3] || "").toLowerCase()) >= 0;
-    }
-  });
+  if (/^1\.[0-7]/.test($.fn.jquery)) {
+    // Support jQuery 1.0 through 1.7.x
+    $.extend($.expr[':'], {
+      'containsi': function(elem, i, match, array) {
+        return $(elem).text().toLowerCase()
+          .indexOf((match[3] || "").toLowerCase()) >= 0;
+      }
+    });
+  } else {
+    $.expr[":"].containsi = $.expr.createPseudo(function(arg) {
+      return function(elem) {
+        return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+      };
+    });
+  }
 
   var Search = function(block) {
     this.callbacks = {};
@@ -18,7 +27,7 @@
 
   function query(selector) {
     if (val = this.val()) {
-      return $(selector + ':containsi("' + val + '")');
+      return $(selector).filter(':containsi("' + val + '")');
     } else {
       return false;
     }
@@ -39,9 +48,6 @@
       };
     }
 
-    $(this).live('keypress', perform);
-    $(this).live('keydown', perform);
-    $(this).live('keyup', perform);
-    $(this).bind('blur', perform);
+    $(this).on('keyup blur', perform);
   }
 })(jQuery);
